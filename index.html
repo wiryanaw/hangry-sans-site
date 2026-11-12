@@ -208,7 +208,10 @@
   .file .mono { color: var(--muted); white-space: nowrap; }
   .code { position: relative; background: var(--surface); border-radius: 18px; padding: 18px; min-width: 0; }
   .code pre { margin: 0; overflow-x: auto; font: 13px/1.6 var(--font-mono); color: var(--ink); }
-  .code .copy { position: absolute; top: 12px; right: 12px; font: 500 12px var(--font-sans); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; }
+  .code-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .code-bar .seg { background: var(--bg); }
+  .code .copy { font: 500 12px var(--font-sans); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; }
+  .code-note { margin: 16px 0 0; padding-top: 14px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
   .tips { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 20px; }
   @media (min-width: 640px) { .tips { grid-template-columns: 1fr 1fr; } }
   .tip { border: 1px solid var(--line); border-radius: 14px; padding: 16px; font-size: 14.5px; }
@@ -480,8 +483,15 @@
         </div>
       </div>
       <div class="code">
-        <button type="button" class="copy" id="copy">Copy CSS</button>
-<pre id="css-snippet">@font-face {
+        <div class="code-bar">
+          <div class="seg" id="code-tabs" role="tablist">
+            <button type="button" data-tab="css" aria-pressed="true">CSS</button>
+            <button type="button" data-tab="next" aria-pressed="false">Next.js</button>
+            <button type="button" data-tab="tailwind" aria-pressed="false">Tailwind</button>
+          </div>
+          <button type="button" class="copy" id="copy">Copy</button>
+        </div>
+<pre class="snippet" data-tab="css">@font-face {
   font-family: "Hangry Sans";
   src: url("HangrySans[wght].woff2") format("woff2");
   font-weight: 100 900;
@@ -506,6 +516,70 @@ h1 {
 .price {
   font-variant-numeric: tabular-nums;
 }</pre>
+<pre class="snippet" data-tab="next" hidden>// app/layout.js
+import localFont from "next/font/local";
+
+const hangrySans = localFont({
+  src: [
+    {
+      path: "./fonts/HangrySans[wght].woff2",
+      weight: "100 900",
+      style: "normal",
+    },
+    {
+      path: "./fonts/HangrySans-Italic[wght].woff2",
+      weight: "100 900",
+      style: "italic",
+    },
+  ],
+  display: "swap",
+  variable: "--font-hangry-sans",
+});
+
+export default function RootLayout({ children }) {
+  return (
+    &lt;html lang="id" className={hangrySans.variable}&gt;
+      &lt;body&gt;{children}&lt;/body&gt;
+    &lt;/html&gt;
+  );
+}
+
+/* app/globals.css */
+body {
+  font-family: var(--font-hangry-sans), sans-serif;
+}</pre>
+<pre class="snippet" data-tab="tailwind" hidden>/* app.css, Tailwind CSS v4 */
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Hangry Sans";
+  src: url("HangrySans[wght].woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Hangry Sans";
+  src: url("HangrySans-Italic[wght].woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@theme {
+  --font-sans: "Hangry Sans", system-ui, sans-serif;
+}
+
+/* with Next.js, point it at the layout.js variable:
+@theme inline {
+  --font-sans: var(--font-hangry-sans);
+} */
+
+&lt;h1 class="font-black tracking-tight"&gt;Hangry&lt;/h1&gt;
+&lt;p class="tabular-nums"&gt;Rp45.000&lt;/p&gt;</pre>
+        <p class="code-note" data-tab="css">Works in any website, app or internal tool. Put the two variable WOFF2 files next to your stylesheet.</p>
+        <p class="code-note" data-tab="next" hidden>For Next.js sites. Put the two variable WOFF2 files in app/fonts. next/font serves the files from your own domain and stops layout shift while the font loads.</p>
+        <p class="code-note" data-tab="tailwind" hidden>For projects on Tailwind CSS v4. Every font-sans class, the default, becomes Hangry Sans.</p>
       </div>
     </div>
   </div>
@@ -739,13 +813,22 @@ h1 {
       s.animate([{ fontWeight: 100 }, { fontWeight: +s.style.fontWeight }], { duration: 1000, delay: i * 70, easing: 'cubic-bezier(.22, 1, .36, 1)', fill: 'backwards' })));
   });
 
-  // copy CSS
+  // code tabs: CSS, Next.js, Tailwind
+  let codeTab = 'css';
+  $('code-tabs').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    codeTab = b.dataset.tab;
+    $('code-tabs').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    document.querySelectorAll('.code [data-tab]:not(button)').forEach(el => el.hidden = el.dataset.tab !== codeTab);
+  });
+
+  // copy the open snippet
   $('copy').addEventListener('click', () => {
-    const text = $('css-snippet').innerText, btn = $('copy');
-    const done = label => { btn.textContent = label; setTimeout(() => btn.textContent = 'Copy CSS', 1600); };
-    if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => done('Copied'), () => select());
+    const pre = document.querySelector(`.code pre[data-tab="${codeTab}"]`), btn = $('copy');
+    const done = label => { btn.textContent = label; setTimeout(() => btn.textContent = 'Copy', 1600); };
+    if (navigator.clipboard) navigator.clipboard.writeText(pre.innerText).then(() => done('Copied'), () => select());
     else select();
-    function select() { const r = document.createRange(); r.selectNodeContents($('css-snippet')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); done('Press ⌘C'); }
+    function select() { const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection(); s.removeAllRanges(); s.addRange(r); done('Press ⌘C'); }
   });
 })();
 </script>
