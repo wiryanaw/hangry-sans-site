@@ -1,6 +1,6 @@
 # Abby Sans website
 
-The public site for Abby Sans, Hangry's typeface:
+The public site for Abby Sans, a typeface built on Geist:
 https://wiryanaw.github.io/abby-sans-site/
 
 This repo only holds the built website. Abby Sans is based on Geist by
