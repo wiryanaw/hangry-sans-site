@@ -1,5 +1,5 @@
 Copyright 2026 The Geist Project Authors (https://github.com/vercel/geist-font)
-Modifications copyright 2026 Hangry (Hangry Sans).
+Modifications copyright 2026 Hangry (Abby Sans).
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
 This license is copied below, and is also available with a FAQ at:
